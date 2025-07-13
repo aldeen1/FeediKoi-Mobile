@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class InfoPill extends StatelessWidget {
-  final String label;
+  final String? label;
+  final Widget? labelWidget;
   final String statusText; // Displayed on right
   final double? value; // Optional, used for logic
   final bool isSystem;
@@ -10,12 +11,13 @@ class InfoPill extends StatelessWidget {
 
   const InfoPill({
     super.key,
-    required this.label,
+    this.label,
     required this.statusText,
     this.value,
     this.subtitle,
     this.isSystem = false,
     this.colorOverride,
+    this.labelWidget,
   });
 
   Color? get statusColor {
@@ -66,8 +68,8 @@ class InfoPill extends StatelessWidget {
                 child: isSystem
                     ? Align(
                   alignment: Alignment.centerRight,
-                  child: Text(
-                    label,
+                  child: labelWidget ?? Text(
+                    label ?? '',
                     textAlign: TextAlign.right,
                     style: const TextStyle(
                       fontSize: 12,
@@ -79,8 +81,8 @@ class InfoPill extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      label,
+                    labelWidget ?? Text(
+                      label ?? '',
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,

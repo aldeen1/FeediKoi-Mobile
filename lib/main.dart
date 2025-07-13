@@ -1,3 +1,5 @@
+import 'package:feedikoi/services/feedikoi_service.dart';
+import 'package:feedikoi/services/logger_feedikoi_service.dart';
 import 'package:feedikoi/shared/widgets/app_bar.dart';
 import 'package:feedikoi/shared/widgets/navbar.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +17,6 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -40,18 +41,19 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final FeedikoiService feedService = LoggingFeedikoiService(MockFeedikoiService());
   int selectedIndex = 0;
-
-  final List<Widget> _pages = const [
-    DashboardPage(),
-    JadwalPakanPage(),
-    StatisticPakanPage(),
-    InfoKolamPage(),
-    ProfilePage()
-  ];
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> _pages = [
+      DashboardPage(),
+      JadwalPakanPage(),
+      StatisticPakanPage(service: feedService,),
+      InfoKolamPage(),
+      ProfilePage()
+    ];
+
     return Scaffold(
       appBar: const CustomAppBar(
         activityText: "Pemberian Makan Berhasil",

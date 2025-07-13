@@ -7,4 +7,5 @@ class InfoKolamPage extends StatelessWidget{
   Widget build(BuildContext context) {
     // TODO: implement build
     throw UnimplementedError();
-  }}
+  }
+}
