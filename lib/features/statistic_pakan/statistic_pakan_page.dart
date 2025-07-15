@@ -1,3 +1,4 @@
+import 'package:feedikoi/data/models/feedikoi_models.dart';
 import 'package:feedikoi/services/feedikoi_service.dart';
 import 'package:feedikoi/shared/widgets/cards.dart';
 import 'package:feedikoi/shared/widgets/pills.dart';
@@ -5,9 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class StatisticPakanPage extends StatelessWidget {
-  StatisticPakanPage({super.key, required this.service});
-
   final FeedikoiService service;
+  const StatisticPakanPage({super.key, required this.service});
 
   @override
   Widget build(BuildContext context) {

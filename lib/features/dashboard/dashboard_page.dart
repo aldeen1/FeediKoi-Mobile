@@ -1,10 +1,13 @@
+import 'package:feedikoi/shared/widgets/fish_card.dart';
 import 'package:feedikoi/shared/widgets/pills.dart';
 import 'package:flutter/material.dart';
 
 import '../../shared/widgets/cards.dart';
+import 'package:feedikoi/services/feedikoi_service.dart';
 
 class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+  final FeedikoiService service;
+  const DashboardPage({super.key, required this.service});
 
   @override
   Widget build(BuildContext context) {
@@ -172,7 +175,8 @@ class DashboardPage extends StatelessWidget {
                 )
               ],
             )
-          ])
+          ]),
+          FishCameraCard(cameraSerial: '1', appKey: 'appKey', appSecret: '', accessToken: '', averageLengthCm: 10)
         ],
       ),
     );

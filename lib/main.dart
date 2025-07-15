@@ -1,5 +1,6 @@
 import 'package:feedikoi/services/feedikoi_service.dart';
 import 'package:feedikoi/services/logger_feedikoi_service.dart';
+import 'package:feedikoi/data/datasource/mock_feedikoi_service.dart';
 import 'package:feedikoi/shared/widgets/app_bar.dart';
 import 'package:feedikoi/shared/widgets/navbar.dart';
 import 'package:flutter/material.dart';
@@ -47,10 +48,10 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> _pages = [
-      DashboardPage(),
-      JadwalPakanPage(),
-      StatisticPakanPage(service: feedService,),
-      InfoKolamPage(),
+      DashboardPage(service: feedService),
+      JadwalPakanPage(service: feedService),
+      StatisticPakanPage(service: feedService),
+      InfoKolamPage(service: feedService),
       ProfilePage()
     ];
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-
+import 'package:feedikoi/data/models/feedikoi_models.dart';
 import 'feedikoi_service.dart';
+import 'package:feedikoi/shared/widgets/fish_growth_line_chart.dart';
+
 
 class LoggingFeedikoiService implements FeedikoiService {
   final FeedikoiService _inner;
@@ -49,6 +51,15 @@ class LoggingFeedikoiService implements FeedikoiService {
     print('[LOG] Subscribed to Inference stream');
     return _inner.getInferenceStream().map((data) {
       print('[LOG] Inference Image URL: ${data.imageUrl}');
+      return data;
+    });
+  }
+
+  @override
+  Stream<List<FishGrowthData>> getGrowthStream() {
+    print('[LOG] Subscribed to Growth stream');
+    return _inner.getGrowthStream().map((data) {
+      print('[LOG] Growth Data Length: ${data.length}');
       return data;
     });
   }

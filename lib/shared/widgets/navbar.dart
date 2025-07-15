@@ -16,7 +16,7 @@ class CustomNavBar extends StatelessWidget {
       Icons.home_outlined,
       Icons.calendar_today_outlined,
       Icons.pie_chart_outline,
-      Icons.place_outlined,
+      Icons.camera_alt_outlined,
       Icons.person_outline,
     ];
 
