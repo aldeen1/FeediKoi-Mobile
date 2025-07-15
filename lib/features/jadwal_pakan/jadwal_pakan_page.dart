@@ -3,16 +3,18 @@ import 'package:flutter/cupertino.dart';
 
 import '../../services/feedikoi_service.dart';
 import '../../shared/widgets/cards.dart';
+import 'package:feedikoi/data/models/feedikoi_models.dart';
 
 class JadwalPakanPage extends StatefulWidget {
-  const JadwalPakanPage({super.key});
+  final FeedikoiService service;
+  const JadwalPakanPage({super.key, required this.service});
 
   @override
   State<JadwalPakanPage> createState() => _JadwalPakanPageState();
 }
 
 class _JadwalPakanPageState extends State<JadwalPakanPage> {
-  final FeedikoiService service = MockFeedikoiService();
+  late final FeedikoiService service;
 
   bool systemOn = false;
   double weightLimitGrams = 2000.0;
@@ -24,6 +26,7 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
   @override
   void initState() {
     super.initState();
+    service = widget.service;
     weightController = TextEditingController(text: weightLimitGrams.toString());
 
     service.getSettingsStream().listen((settings) {
