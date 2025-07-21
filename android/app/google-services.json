@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1068561620607",
+    "project_id": "feedikoi-project",
+    "storage_bucket": "feedikoi-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1068561620607:android:eb4e39e8569f03284a294a",
+        "android_client_info": {
+          "package_name": "com.example.feedikoi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyADYfL3whMiajdyzC9jhiAdcxgBS-qNyxU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

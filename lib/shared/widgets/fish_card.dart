@@ -11,7 +11,7 @@ class FishCameraCard extends StatefulWidget {
   final String appKey;
   final String appSecret;
   final double averageLengthCm;
-  FishCameraCard({
+  const FishCameraCard({
     super.key,
     required this.cameraSerial,
     this.channelNo = 1,
@@ -115,7 +115,7 @@ class _FishCameraCardState extends State<FishCameraCard> {
           ],
         ),
         const SizedBox(height: 8),
-        Container(
+        SizedBox(
           width: double.infinity,
           height: 250,
           child: Stack(

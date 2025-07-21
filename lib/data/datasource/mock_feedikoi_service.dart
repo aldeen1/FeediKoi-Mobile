@@ -49,6 +49,7 @@ class MockFeedikoiService implements FeedikoiService{
     );
   }
 
+  @override
   Stream<List<FishGrowthData>> getGrowthStream() => _growthCtrl.stream;
 
   void _pushCurrent(){

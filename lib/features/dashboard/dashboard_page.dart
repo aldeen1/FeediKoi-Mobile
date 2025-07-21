@@ -1,4 +1,3 @@
-import 'package:feedikoi/shared/widgets/fish_card.dart';
 import 'package:feedikoi/shared/widgets/pills.dart';
 import 'package:feedikoi/shared/widgets/rtsp_card.dart';
 import 'package:flutter/material.dart';

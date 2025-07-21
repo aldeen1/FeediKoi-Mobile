@@ -10,12 +10,12 @@ class FishGrowthLineChart extends StatelessWidget {
   final String yLabel;
 
   const FishGrowthLineChart({
-    Key? key,
+    super.key,
     required this.stream,
     this.title = 'Fish Growth Over Time',
     this.xLabel = 'Day',
     this.yLabel = 'Length (cm)',
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +79,7 @@ class FishGrowthLineChart extends StatelessWidget {
                         color: Colors.blue,
                         barWidth: 3,
                         dotData: FlDotData(show: true),
-                        belowBarData: BarAreaData(show: true, color: Colors.blue.withOpacity(0.2)),
+                        belowBarData: BarAreaData(show: true, color: Colors.blue.withValues(alpha: 0.2)),
                       ),
                     ],
                   ),

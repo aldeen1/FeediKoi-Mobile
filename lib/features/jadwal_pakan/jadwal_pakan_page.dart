@@ -196,7 +196,7 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
                             ],
                           ),
                         );
-                      }).toList(),
+                      }),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Center(

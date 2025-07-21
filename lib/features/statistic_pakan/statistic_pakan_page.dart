@@ -78,7 +78,7 @@ class StatisticPakanPage extends StatelessWidget {
                         colorOverride: e.success ? Colors.lightGreenAccent[100] : Colors.redAccent[100],
                         statusText: e.success ? "Berhasil" : "Gagal",
                     );
-                  }).toList(),
+                  }),
                 ]
               );
             }).toList(),

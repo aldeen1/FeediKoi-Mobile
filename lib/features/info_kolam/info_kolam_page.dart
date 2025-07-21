@@ -1,7 +1,4 @@
-import 'package:feedikoi/shared/widgets/fish_card.dart';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
 
 import '../../shared/widgets/cards.dart';
 import '../../shared/widgets/pills.dart';
@@ -10,7 +7,7 @@ import 'package:feedikoi/services/feedikoi_service.dart';
 
 class InfoKolamPage extends StatelessWidget {
   final FeedikoiService service;
-  const InfoKolamPage({Key? key, required this.service}) : super(key: key);
+  const InfoKolamPage({super.key, required this.service});
 
   @override
   Widget build(BuildContext context) {
