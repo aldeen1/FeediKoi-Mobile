@@ -1,5 +1,6 @@
 import 'package:feedikoi/shared/widgets/fish_card.dart';
 import 'package:feedikoi/shared/widgets/pills.dart';
+import 'package:feedikoi/shared/widgets/rtsp_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../shared/widgets/cards.dart';
@@ -176,7 +177,8 @@ class DashboardPage extends StatelessWidget {
               ],
             )
           ]),
-          FishCameraCard(cameraSerial: 'BB9582723', appKey: '4670d7f3851a4f64931bd0078570427f', appSecret: 'a85ee950af884889a2ca179b5b48ac82', averageLengthCm: 10)
+          // FishCameraCard(cameraSerial: 'BB9582723', appKey: '4670d7f3851a4f64931bd0078570427f', appSecret: 'a85ee950af884889a2ca179b5b48ac82', averageLengthCm: 10)
+          RTSPCard(url: '')
         ],
       ),
     );
