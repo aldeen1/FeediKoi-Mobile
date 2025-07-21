@@ -176,7 +176,7 @@ class DashboardPage extends StatelessWidget {
               ],
             )
           ]),
-          FishCameraCard(cameraSerial: '1', appKey: 'appKey', appSecret: '', accessToken: '', averageLengthCm: 10)
+          FishCameraCard(cameraSerial: 'BB9582723', appKey: '4670d7f3851a4f64931bd0078570427f', appSecret: 'a85ee950af884889a2ca179b5b48ac82', averageLengthCm: 10)
         ],
       ),
     );
