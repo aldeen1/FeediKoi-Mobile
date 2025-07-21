@@ -131,7 +131,7 @@ class InfoKolamPage extends StatelessWidget {
               ],
             ),
             // FishCameraCard(appKey: '4670d7f3851a4f64931bd0078570427f', appSecret: 'a85ee950af884889a2ca179b5b48ac82', cameraSerial: 'BB9582723', averageLengthCm: 10,),
-            CustomCard(
+            /*CustomCard(
               margin: EdgeInsetsGeometry.symmetric(horizontal: 16),
               backgroundColor: Colors.grey[200],
               children: [
@@ -157,7 +157,7 @@ class InfoKolamPage extends StatelessWidget {
                   ),
                 ),
               ],
-            )
+            )*/
           ],
         ),
       ),

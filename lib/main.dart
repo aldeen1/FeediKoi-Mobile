@@ -1,3 +1,4 @@
+import 'package:feedikoi/data/repositories/FirebaseRepository.dart';
 import 'package:feedikoi/firebase_options.dart';
 import 'package:feedikoi/services/feedikoi_service.dart';
 import 'package:feedikoi/services/logger_feedikoi_service.dart';
@@ -7,6 +8,7 @@ import 'package:feedikoi/shared/widgets/navbar.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:media_kit/media_kit.dart';
 
 import 'features/dashboard/dashboard_page.dart';
 import 'features/info_kolam/info_kolam_page.dart';
@@ -19,6 +21,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform
   );
+  MediaKit.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -49,7 +52,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final FeedikoiService feedService = LoggingFeedikoiService(MockFeedikoiService());
+  final FeedikoiService feedService = LoggingFeedikoiService(FirebaseRepository());
   int selectedIndex = 0;
 
   @override

@@ -1,10 +1,8 @@
 import 'package:feedikoi/data/models/feedikoi_models.dart';
 import 'package:feedikoi/services/feedikoi_service.dart';
-import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:feedikoi/shared/widgets/fish_growth_line_chart.dart';
 
-class MockFeedikoiService implements FeedikoiService{
+class MockFeedikoiService implements FeedikoiService {
   final _currentCtrl = BehaviorSubject<CurrentData>();
   final _historyCtrl = BehaviorSubject<List<FeedHistoryEntry>>();
   final _settingsCtrl = BehaviorSubject<FeedSettings>();
@@ -14,17 +12,17 @@ class MockFeedikoiService implements FeedikoiService{
   bool _systemOn = true;
   final List<FeedHistoryEntry> _history = [];
   final List<FishGrowthData> _growthData = [];
+
   FeedSettings _settings = FeedSettings(
-    feedTime: TimeOfDay(hour: 8, minute: 0),
+    feedTime: ['08:00', '14:00'],
     weightLimitKG: 5.0,
-    systemOn: true
   );
 
-  MockFeedikoiService(){
+  MockFeedikoiService() {
     final now = DateTime.now();
     for (int i = 0; i < 15; i++) {
       final dayOffset = i ~/ 2;
-      final hour = 8 + (i % 2) * 6; 
+      final hour = 8 + (i % 2) * 6;
       _history.add(
         FeedHistoryEntry(
           time: now.subtract(Duration(days: dayOffset, hours: now.hour - hour)),
@@ -32,38 +30,48 @@ class MockFeedikoiService implements FeedikoiService{
         ),
       );
     }
-    // Mock growth data (simulate 5 measurements)
     _growthData.addAll([
-      FishGrowthData(day: 1, length: 8),
-      FishGrowthData(day: 7, length: 12),
-      FishGrowthData(day: 14, length: 16),
-      FishGrowthData(day: 21, length: 19),
-      FishGrowthData(day: 28, length: 23),
+      FishGrowthData(
+          date: DateTime.now().subtract(const Duration(days: 28)),
+          length: 8,
+          weight: 100),
+      FishGrowthData(
+          date: DateTime.now().subtract(const Duration(days: 21)),
+          length: 12,
+          weight: 150),
+      FishGrowthData(
+          date: DateTime.now().subtract(const Duration(days: 14)),
+          length: 16,
+          weight: 200),
+      FishGrowthData(
+          date: DateTime.now().subtract(const Duration(days: 7)),
+          length: 19,
+          weight: 250),
+      FishGrowthData(date: DateTime.now(), length: 23, weight: 300),
     ]);
     _growthCtrl.add(_growthData);
     _pushCurrent();
     _pushHistory();
     _settingsCtrl.add(_settings);
-    _inferenceCtrl.add(
-      InferenceResult(imageUrl: 'https://placekitten.com/400/300', bboxCm: {'koi': 23.0, 'weed': 10.1})
-    );
+    _inferenceCtrl.add(InferenceResult(
+        imageUrl: 'https://placekitten.com/400/300',
+        bboxCm: {'koi': 23.0, 'weed': 10.1}));
   }
 
   @override
   Stream<List<FishGrowthData>> getGrowthStream() => _growthCtrl.stream;
 
-  void _pushCurrent(){
-    final now = DateTime.now();
-    _currentCtrl.add(
-        CurrentData(
-            timeStamp: now,
-            systemOn: _systemOn,
-            nextFeedETA: now.add(const Duration(hours: 2)),
-            feedWeightKG: 2.5 + (now.second % 3) 
-        )
-    );
+  void _pushCurrent() {
+    _currentCtrl.add(CurrentData(
+      timeStamp: DateTime.now().toIso8601String(),
+      systemOn: _systemOn,
+      feedSettings: _settings,
+      location: 'Mock Location',
+      namaKolam: 'Mock Kolam',
+    ));
   }
-  void _pushHistory(){
+
+  void _pushHistory() {
     _historyCtrl.add(_history);
   }
 
@@ -80,33 +88,22 @@ class MockFeedikoiService implements FeedikoiService{
   Stream<FeedSettings> getSettingsStream() => _settingsCtrl.stream;
 
   @override
-  Future<void> toggleSystem(bool on) async {
-    _systemOn = on;
-    _pushCurrent();
-  }
-
-  @override
-  Future<void> triggerFeedNow() async {
-    final now = DateTime.now();
-    final entry = FeedHistoryEntry(time: now, success: true);
-    _history.add(entry);
-    _pushHistory();
-    _pushCurrent();
-  }
-
-  @override
   Future<void> updateSettings(FeedSettings newSettings) async {
     _settings = newSettings;
     _settingsCtrl.add(_settings);
-    _systemOn = newSettings.systemOn;
     _pushCurrent();
   }
 
-  void simulateInference(InferenceResult inference){
-    _inferenceCtrl.add(inference);
-    final day = _growthData.isNotEmpty ? _growthData.last.day + 7 : 1;
+  @override
+  Future<void> updateSystemStatus(bool systemOn) async {
+    _systemOn = systemOn;
+    _pushCurrent();
+  }
+
+  void simulateInference(InferenceResult inference) {
     final length = inference.bboxCm['koi'] ?? 0;
-    _growthData.add(FishGrowthData(day: day, length: length));
+    _growthData
+        .add(FishGrowthData(date: DateTime.now(), length: length, weight: 0));
     _growthCtrl.add(List.from(_growthData));
   }
 } 

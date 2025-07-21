@@ -1,22 +1,69 @@
+import 'dart:async';
 import 'package:feedikoi/shared/widgets/pills.dart';
 import 'package:feedikoi/shared/widgets/rtsp_card.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../shared/widgets/cards.dart';
 import 'package:feedikoi/services/feedikoi_service.dart';
+import 'package:feedikoi/utils/feeding_time_util.dart';
+import 'package:feedikoi/data/models/feedikoi_models.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   final FeedikoiService service;
   const DashboardPage({super.key, required this.service});
 
   @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  late Timer _timer;
+  DateTime _currentTime = DateTime.now();
+  List<String> _feedTimes = [];
+  bool _systemOn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Update time every minute
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      setState(() {
+        _currentTime = DateTime.now();
+      });
+    });
+
+    widget.service.getSettingsStream().listen((settings) {
+      setState(() {
+        _feedTimes = settings.feedTime;
+      });
+    });
+
+    widget.service.getCurrentDataStream().listen((data) {
+      setState(() {
+        _systemOn = data.systemOn;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final timeFormat = DateFormat('HH.mm');
+    final dateFormat = DateFormat('EEEE, d MMM y');
+    final nextFeedingDuration = FeedingTimeUtil.getTimeUntilNextFeeding(_feedTimes);
+
     return SingleChildScrollView(
       child: Column(
         children: [
           CustomCard(
             backgroundColor: Colors.grey[100],
-            margin: EdgeInsets.symmetric(horizontal: 16),
+            margin: const EdgeInsets.symmetric(horizontal: 16),
             children: [
               Row(
                 children: [
@@ -25,7 +72,7 @@ class DashboardPage extends StatelessWidget {
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
+                          children: const [
                             Text(
                               "Kolam - 1",
                               style: TextStyle(
@@ -40,7 +87,6 @@ class DashboardPage extends StatelessWidget {
                   )
                 ],
               ),
-
               Row(
                 children: [
                   Expanded(
@@ -85,7 +131,7 @@ class DashboardPage extends StatelessWidget {
                                 textBaseline: TextBaseline.alphabetic,
                                 children: [
                                   Text(
-                                    "20.00",
+                                    timeFormat.format(_currentTime),
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 36,
@@ -101,7 +147,7 @@ class DashboardPage extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              "Sunday, 18th May 2025",
+                              dateFormat.format(_currentTime),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
@@ -114,14 +160,14 @@ class DashboardPage extends StatelessWidget {
                   )
                 ],
               ),
-
               Row(
                 children: [
                   Expanded(
                     child: InfoPill(
                       label: "System Status",
-                      statusText: "ON",
+                      statusText: _systemOn ? "ON" : "OFF",
                       isSystem: true,
+                      colorOverride: _systemOn ? Colors.greenAccent[100] : Colors.redAccent[100],
                     ),
                   )
                 ],
@@ -137,46 +183,101 @@ class DashboardPage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: InfoPill(label: "Waktu Pemberian Makan", statusText: "180 menit", subtitle: "Good", isSystem: false,)),
+                      Expanded(
+                        child: InfoPill(
+                          label: "Waktu Pemberian Makan",
+                          statusText: FeedingTimeUtil.formatDuration(nextFeedingDuration),
+                          subtitle: "Jadwal berikutnya",
+                          isSystem: false,
+                        ),
+                      ),
                     ],
                   ),
                   Row(
-                      children: [
-                        Expanded(child: InfoPill(label: "Berat Pakan", statusText: "90%", subtitle: "Good", isSystem: false,))
-                      ],
+                    children: [
+                      Expanded(
+                        child: InfoPill(
+                          label: "Berat Pakan",
+                          statusText: "90%",
+                          subtitle: "Good",
+                          isSystem: false,
+                        ),
+                      )
+                    ],
                   )
                 ],
               )
-            ]
+            ],
           ),
-          CustomCard(
-            margin: EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-            padding: EdgeInsets.all(10),
-            children: [
-            Column(
-              children: [
-                Row(
+          StreamBuilder<List<FeedHistoryEntry>>(
+            stream: widget.service.getHistoryStream(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const CircularProgressIndicator();
+              }
+
+              final history = snapshot.data!;
+
+              if (history.isEmpty){
+                return CustomCard(
+                  margin: EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                  padding: EdgeInsets.all(10),
+                  backgroundColor: Colors.grey[100],
                   children: [
-                  Text("Aktivitas")
-                ],),
-                Column(
-                  children: [
-                    Row(
+                    Column(
                       children: [
-                        Expanded(child: InfoPill(label: "Pemberian Makan", statusText: "19/05/2025", subtitle: "Berhasil", isSystem: false,)),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Expanded(child: InfoPill(label: "Pemberian Makan", statusText: "18/05/2025", subtitle: "Berhasil", isSystem: false,)),
+                        Row(
+                          children: const [
+                            Text("Aktivitas")
+                          ],
+                        ),
+                        Column(
+                          children: const [
+                            Text("Alat belum melakukan logging")
+                          ]
+                            
+                        )
                       ],
                     )
                   ],
-                )
-              ],
-            )
-          ]),
-          // FishCameraCard(cameraSerial: 'BB9582723', appKey: '4670d7f3851a4f64931bd0078570427f', appSecret: 'a85ee950af884889a2ca179b5b48ac82', averageLengthCm: 10)
+                );
+              }
+
+              final dateFormatter = DateFormat('dd/MM/yyyy');
+
+              return CustomCard(
+                margin: EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                padding: EdgeInsets.all(10),
+                children: [
+                  Column(
+                    children: [
+                      Row(
+                        children: const [
+                          Text("Aktivitas")
+                        ],
+                      ),
+                      Column(
+                        children: history.take(2).map((entry) {
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: InfoPill(
+                                  label: "Pemberian Makan",
+                                  statusText: dateFormatter.format(entry.time),
+                                  subtitle: entry.success ? "Berhasil" : "Gagal",
+                                  isSystem: false,
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      )
+                    ],
+                  )
+                ],
+              );
+            }
+          ),
           RTSPCard(url: '')
         ],
       ),

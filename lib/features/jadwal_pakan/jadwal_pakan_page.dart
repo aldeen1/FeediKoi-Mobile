@@ -18,7 +18,7 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
 
   bool systemOn = false;
   double weightLimitGrams = 2000.0;
-  List<TimeOfDay> feedTimes = [];
+  List<String> feedTimes = [];
   bool isLoading = true;
 
   late TextEditingController weightController;
@@ -31,28 +31,37 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
 
     service.getSettingsStream().listen((settings) {
       setState(() {
-        systemOn = settings.systemOn;
-        weightLimitGrams = settings.weightLimitKG * 1000;
-        feedTimes = [settings.feedTime];
+        weightLimitGrams = settings.weightLimitKG;
+        feedTimes = settings.feedTime;
         isLoading = false;
+      });
+    });
+
+    service.getCurrentDataStream().listen((data) {
+      setState(() {
+        systemOn = data.systemOn;
       });
     });
   }
 
   void _addFeedTime() {
     setState(() {
-      feedTimes.add(TimeOfDay.now());
+      final now = TimeOfDay.now();
+      feedTimes.add('${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}');
     });
   }
 
   void _saveSettings() {
     final updated = FeedSettings(
-      feedTime: feedTimes.first,
+      feedTime: feedTimes,
       weightLimitKG: weightLimitGrams,
-      systemOn: systemOn,
     );
     service.updateSettings(updated);
     print("Saved to service.");
+  }
+
+  void _updateSystemStatus(bool val) {
+    service.updateSystemStatus(val);
   }
 
   @override
@@ -110,8 +119,8 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
                                   activeTrackColor: Colors.greenAccent[200],
                                   inactiveThumbColor: Colors.white,
                                   trackOutlineColor:
-                                  WidgetStateProperty.all(Colors.transparent),
-                                  onChanged: (val) => setState(() => systemOn = val),
+                                      WidgetStateProperty.all(Colors.transparent),
+                                  onChanged: _updateSystemStatus,
                                 ),
                               ),
                             ],
@@ -138,7 +147,18 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
                       ),
                       ...feedTimes.asMap().entries.map((entry) {
                         int index = entry.key;
-                        TimeOfDay time = entry.value;
+                        TimeOfDay time;
+                        try {
+                          final dt = DateTime.parse(entry.value);
+                          time = TimeOfDay.fromDateTime(dt);
+                        } catch (e) {
+                          try {
+                            final parts = entry.value.split(':');
+                            time = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+                          } catch (e2) {
+                            time = TimeOfDay.now();
+                          }
+                        }
 
                         return Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 0),
@@ -162,7 +182,7 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
                                           initialTime: time,
                                           onTimeSelected: (selected) {
                                             setState(() {
-                                              feedTimes[index] = selected;
+                                              feedTimes[index] = '${selected.hour.toString().padLeft(2, '0')}:${selected.minute.toString().padLeft(2, '0')}';
                                             });
                                           },
                                         ),

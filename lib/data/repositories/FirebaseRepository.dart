@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feedikoi/data/models/feedikoi_models.dart';
 import 'package:feedikoi/services/feedikoi_service.dart';
-import 'package:feedikoi/shared/widgets/fish_growth_line_chart.dart';
+import 'package:feedikoi/shared/widgets/fish_growth_line_chart.dart' hide FishGrowthData;
 import 'package:firebase_database/firebase_database.dart';
 
 class FirebaseRepository implements FeedikoiService {
@@ -10,48 +10,64 @@ class FirebaseRepository implements FeedikoiService {
 
   @override
   Stream<CurrentData> getCurrentDataStream() {
-    throw UnimplementedError();
+    final docRef = _firestore.collection("kolam").doc("kolam1");
+
+    return docRef.snapshots().map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return CurrentData.fromJson(data);
+    });
   }
 
   @override
   Stream<List<FishGrowthData>> getGrowthStream() {
-    // TODO: implement getGrowthStream
-    throw UnimplementedError();
+    final collectionRef = _firestore.collection("kolam/kolam1/fishGrowth");
+
+    return collectionRef.snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((doc) => FishGrowthData.fromJson(doc.data()))
+          .toList();
+    });
   }
 
   @override
   Stream<List<FeedHistoryEntry>> getHistoryStream() {
-    return _database.ref('sensor_data').onValue.map((event) => CurrentData.fromMap(event.snapshot.value));
+    final collectionRef = _firestore.collection("kolam/kolam1/feedHistory");
+
+    return collectionRef.snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((doc) => FeedHistoryEntry.fromJson(doc.data()))
+          .toList();
+    });
   }
 
   @override
   Stream<InferenceResult> getInferenceStream() {
-    // TODO: implement getInferenceStream
-    throw UnimplementedError();
+    final docRef = _firestore.collection("kolam").doc("kolam1");
+    return docRef.snapshots().map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      // Assuming 'inference' is a field in your 'kolam1' document
+      return InferenceResult.fromJson(data['inference'] as Map<String, dynamic>);
+    });
   }
 
   @override
   Stream<FeedSettings> getSettingsStream() {
-    // TODO: implement getSettingsStream
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> toggleSystem(bool on) {
-    // TODO: implement toggleSystem
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> triggerFeedNow() {
-    // TODO: implement triggerFeedNow
-    throw UnimplementedError();
+    final docRef = _firestore.collection("kolam").doc("kolam1");
+    return docRef.snapshots().map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return FeedSettings.fromJson(data['feedSettings'] as Map<String, dynamic>);
+    });
   }
 
   @override
   Future<void> updateSettings(FeedSettings newSettings) {
-    // TODO: implement updateSettings
-    throw UnimplementedError();
+    final docRef = _firestore.collection("kolam").doc("kolam1");
+    return docRef.update({'feedSettings': newSettings.toJson()});
   }
-  
+
+  @override
+  Future<void> updateSystemStatus(bool systemOn) {
+    final docRef = _firestore.collection("kolam").doc("kolam1");
+    return docRef.update({'systemOn': systemOn});
+  }
 }

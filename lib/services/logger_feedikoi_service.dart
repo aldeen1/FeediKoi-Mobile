@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:feedikoi/data/models/feedikoi_models.dart';
 import 'feedikoi_service.dart';
-import 'package:feedikoi/shared/widgets/fish_growth_line_chart.dart';
+import 'package:feedikoi/shared/widgets/fish_growth_line_chart.dart' hide FishGrowthData;
 
 
 class LoggingFeedikoiService implements FeedikoiService {
@@ -40,8 +40,8 @@ class LoggingFeedikoiService implements FeedikoiService {
   Stream<FeedSettings> getSettingsStream() {
     print('[LOG] Subscribed to Settings stream');
     return _inner.getSettingsStream().map((data) {
-      print('[LOG] Settings: feedTime=${formatTimeOfDay(data.feedTime)}, '
-          'weightLimitKG=${data.weightLimitKG}, systemOn=${data.systemOn}');
+      print('[LOG] Settings: feedTime=${data.feedTime.join(', ')}, '
+          'weightLimitKG=${data.weightLimitKG}');
       return data;
     });
   }
@@ -65,23 +65,15 @@ class LoggingFeedikoiService implements FeedikoiService {
   }
 
   @override
-  Future<void> toggleSystem(bool on) async {
-    print('[LOG] toggleSystem called: $on');
-    return _inner.toggleSystem(on);
-  }
-
-  @override
-  Future<void> triggerFeedNow() async {
-    print('[LOG] triggerFeedNow called');
-    return _inner.triggerFeedNow();
-  }
-
-  @override
-  Future<void> updateSettings(FeedSettings newSettings) async {
-    print('[LOG] updateSettings called: '
-        'feedTime=${formatTimeOfDay(newSettings.feedTime)}, '
-        'weightLimitKG=${newSettings.weightLimitKG}, '
-        'systemOn=${newSettings.systemOn}');
+  Future<void> updateSettings(FeedSettings newSettings) {
+    print('[LOG] Updating settings to: feedTime=${newSettings.feedTime.join(', ')}, '
+        'weightLimitKG=${newSettings.weightLimitKG}');
     return _inner.updateSettings(newSettings);
+  }
+
+  @override
+  Future<void> updateSystemStatus(bool systemOn) {
+    print('[LOG] Updating system status to: $systemOn');
+    return _inner.updateSystemStatus(systemOn);
   }
 }
