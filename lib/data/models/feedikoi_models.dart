@@ -34,22 +34,49 @@ class FeedSettings {
 
   factory FeedSettings.fromJson(Map<String, dynamic> json) {
     List<String> times = [];
+    print("Feed settings data: $json");
     if (json['feedTime'] is Map) {
       final feedTimeMap = json['feedTime'] as Map<String, dynamic>;
+      print("Feed time map: $feedTimeMap");
       times = feedTimeMap.values.map((t) {
         if (t is Timestamp) {
           return t.toDate().toIso8601String();
         } else if (t is String) {
+          if (t.length == 5 && t.contains(':')) {
+            final now = DateTime.now();
+            final parts = t.split(':');
+            final time = DateTime(
+              now.year,
+              now.month,
+              now.day,
+              int.parse(parts[0]),
+              int.parse(parts[1]),
+            );
+            return time.toIso8601String();
+          }
           return t;
         }
         return t.toString();
       }).toList();
     } else if (json['feedTime'] is List) {
+      print("Feed time list: ${json['feedTime']}");
       times = List<dynamic>.from(json['feedTime'])
           .map((t) {
             if (t is Timestamp) {
               return t.toDate().toIso8601String();
             } else if (t is String) {
+              if (t.length == 5 && t.contains(':')) {
+                final now = DateTime.now();
+                final parts = t.split(':');
+                final time = DateTime(
+                  now.year,
+                  now.month,
+                  now.day,
+                  int.parse(parts[0]),
+                  int.parse(parts[1]),
+                );
+                return time.toIso8601String();
+              }
               return t;
             }
             return t.toString();
@@ -57,6 +84,7 @@ class FeedSettings {
           .toList()
           .cast<String>();
     }
+    print("Parsed feed times: $times");
 
     return FeedSettings(
       feedTime: times,
@@ -81,10 +109,54 @@ class FeedHistoryEntry {
     required this.success,
   });
 
-  factory FeedHistoryEntry.fromJson(Map<String, dynamic> json) {
+  factory FeedHistoryEntry.fromJson(Map<String, dynamic> json, FeedSettings settings) {
+    print("Parsing history entry: $json");
+    print("Feed settings times: ${settings.feedTime}");
+    
+    final time = DateTime.parse(json['time'] as String);
+    
+    bool success = false;
+    for (String feedTime in settings.feedTime) {
+      try {
+        DateTime parsedFeedTime;
+        if (feedTime.length == 5 && feedTime.contains(':')) {
+          final parts = feedTime.split(':');
+          parsedFeedTime = DateTime(
+            time.year,
+            time.month,
+            time.day,
+            int.parse(parts[0]),
+            int.parse(parts[1]),
+          );
+        } else {
+          parsedFeedTime = DateTime.parse(feedTime);
+        }
+        
+        if (parsedFeedTime.hour == time.hour && parsedFeedTime.minute == time.minute) {
+          success = true;
+          break;
+        }
+      } catch (e) {
+        print("Error parsing feed time: $feedTime, Error: $e");
+        continue;
+      }
+    }
+    
     return FeedHistoryEntry(
-      time: (json['time'] as Timestamp).toDate(),
-      success: json['success'],
+      time: time,
+      success: success,
+    );
+  }
+
+  factory FeedHistoryEntry.fromJsonWithSuccess(Map<String, dynamic> json) {
+    print("Parsing history entry with stored success: $json");
+    
+    final time = DateTime.parse(json['time'] as String);
+    final success = json['success'] as bool;
+    
+    return FeedHistoryEntry(
+      time: time,
+      success: success,
     );
   }
 }

@@ -3,12 +3,13 @@
 import 'package:feedikoi/data/models/feedikoi_models.dart';
 import 'package:feedikoi/shared/widgets/fish_growth_line_chart.dart' hide FishGrowthData;
 
-abstract class FeedikoiService{
+abstract class FeedikoiService {
   Stream<CurrentData> getCurrentDataStream();
   Stream<List<FeedHistoryEntry>> getHistoryStream();
   Stream<FeedSettings> getSettingsStream();
   Stream<InferenceResult> getInferenceStream();
   Stream<List<FishGrowthData>> getGrowthStream();
+  Stream<double> getCurrentWeightStream();
 
   Future<void> updateSettings(FeedSettings newSettings);
   Future<void> updateSystemStatus(bool systemOn);

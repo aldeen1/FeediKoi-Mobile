@@ -76,4 +76,13 @@ class LoggingFeedikoiService implements FeedikoiService {
     print('[LOG] Updating system status to: $systemOn');
     return _inner.updateSystemStatus(systemOn);
   }
+
+  @override
+  Stream<double> getCurrentWeightStream() {
+    print('[LOG] Subscribed to Current Weight stream');
+    return _inner.getCurrentWeightStream().map((weight) {
+      print('[LOG] Current Weight: $weight kg');
+      return weight;
+    });
+  }
 }

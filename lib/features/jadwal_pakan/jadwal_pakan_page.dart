@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/feedikoi_service.dart';
 import '../../shared/widgets/cards.dart';
@@ -22,12 +24,16 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
   bool isLoading = true;
 
   late TextEditingController weightController;
+  late TextEditingController _ipController;
+  bool _isEditingIp = false;
 
   @override
   void initState() {
     super.initState();
     service = widget.service;
     weightController = TextEditingController(text: weightLimitGrams.toString());
+    _ipController = TextEditingController();
+    _loadCameraIp();
 
     service.getSettingsStream().listen((settings) {
       setState(() {
@@ -43,6 +49,34 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
       });
     });
   }
+
+  Future<void> _loadCameraIp() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedIp = prefs.getString('camera_ip') ?? '192.168.33.234';
+    setState(() {
+      _ipController.text = savedIp;
+    });
+  }
+
+  Future<void> _saveCameraIp() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('camera_ip', _ipController.text);
+    setState(() {
+      _isEditingIp = false;
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Camera IP saved')));
+    }
+  }
+
+  @override
+  void dispose() {
+    weightController.dispose();
+    _ipController.dispose();
+    super.dispose();
+  }
+
+
 
   void _addFeedTime() {
     setState(() {
@@ -96,37 +130,44 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
                           )
                         ],
                       ),
-                      CustomCard(
+                      Row(
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  "System Status",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
+                          Expanded(
+                            child: CustomCard(
+                              padding: const EdgeInsets.all(12),
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Camera IP', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                    IconButton(
+                                      icon: Icon(_isEditingIp ? Icons.save : Icons.edit),
+                                      onPressed: () {
+                                        if (_isEditingIp) {
+                                          _saveCameraIp();
+                                        } else {
+                                          setState(() => _isEditingIp = true);
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                TextField(
+                                  controller: _ipController,
+                                  enabled: _isEditingIp,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    prefixIcon: Icon(Icons.videocam),
+                                    hintText: 'Enter camera IP',
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 80),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Switch(
-                                  value: systemOn,
-                                  activeTrackColor: Colors.greenAccent[200],
-                                  inactiveThumbColor: Colors.white,
-                                  trackOutlineColor:
-                                      WidgetStateProperty.all(Colors.transparent),
-                                  onChanged: _updateSystemStatus,
-                                ),
-                              ),
-                            ],
-                          )
+                              ],
+                            ),
+                          ),
                         ],
                       ),
+                      const SizedBox(height: 12),
                     ],
                   ),
                 )
@@ -185,6 +226,11 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
                                               feedTimes[index] = '${selected.hour.toString().padLeft(2, '0')}:${selected.minute.toString().padLeft(2, '0')}';
                                             });
                                           },
+                                          onTimeDeleted: (selected) {
+                                            setState(() {
+                                              feedTimes.removeAt(index);
+                                            });
+                                          },
                                         ),
                                       );
                                     },
@@ -217,6 +263,7 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
                           ),
                         );
                       }),
+                      feedTimes.length < 2 ?
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Center(
@@ -225,7 +272,7 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
                             onPressed: _addFeedTime,
                           ),
                         ),
-                      )
+                      ) : SizedBox.square(dimension: 32,)
                     ],
                   ),
                 )
@@ -248,10 +295,12 @@ class _JadwalPakanPageState extends State<JadwalPakanPage> {
 class TimeScrollPicker extends StatefulWidget {
   final TimeOfDay initialTime;
   final Function(TimeOfDay) onTimeSelected;
+  final Function(TimeOfDay) onTimeDeleted;
 
   const TimeScrollPicker({
     required this.initialTime,
     required this.onTimeSelected,
+    required this.onTimeDeleted,
     super.key,
   });
 
@@ -272,6 +321,11 @@ class _TimeScrollPickerState extends State<TimeScrollPicker> {
 
   void _onConfirm() {
     widget.onTimeSelected(TimeOfDay(hour: selectedHour, minute: selectedMinute));
+    Navigator.pop(context);
+  }
+
+  void _onDelete(){
+    widget.onTimeDeleted(TimeOfDay(hour: selectedHour, minute: selectedMinute));
     Navigator.pop(context);
   }
 
@@ -308,6 +362,10 @@ class _TimeScrollPickerState extends State<TimeScrollPicker> {
           onPressed: _onConfirm,
           child: const Text("Set"),
         ),
+        CupertinoActionSheetAction(
+            onPressed: _onDelete,
+            child: const Text("Delete")
+        )
       ],
       cancelButton: CupertinoActionSheetAction(
         isDefaultAction: true,

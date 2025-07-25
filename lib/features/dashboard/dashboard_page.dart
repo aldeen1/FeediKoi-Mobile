@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:feedikoi/shared/widgets/pills.dart';
 import 'package:feedikoi/shared/widgets/rtsp_card.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class _DashboardPageState extends State<DashboardPage> {
   DateTime _currentTime = DateTime.now();
   List<String> _feedTimes = [];
   bool _systemOn = false;
+  int _currentMonth = DateTime.now().month;
 
   @override
   void initState() {
@@ -42,8 +44,21 @@ class _DashboardPageState extends State<DashboardPage> {
     widget.service.getCurrentDataStream().listen((data) {
       setState(() {
         _systemOn = data.systemOn;
+        if(data.timeStamp != null){
+          DateTime deviceStartDate;
+          if(data.timeStamp is Timestamp){
+            deviceStartDate = (data.timeStamp as Timestamp).toDate();
+          }else if (data.timeStamp is DateTime){
+            deviceStartDate = data.timeStamp as DateTime;
+          }else{
+            deviceStartDate = DateTime.now();
+            print("data.timeStamp is in a different format");
+          }
+          _currentMonth = ((DateTime.now().year - deviceStartDate.year) * 12) + DateTime.now().month - deviceStartDate.month + 1;
+        }
       });
     });
+
   }
 
   @override
@@ -160,7 +175,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   )
                 ],
               ),
-              Row(
+              /*Row(
                 children: [
                   Expanded(
                     child: InfoPill(
@@ -171,7 +186,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   )
                 ],
-              )
+              )*/
             ],
           ),
           CustomCard(
@@ -196,11 +211,39 @@ class _DashboardPageState extends State<DashboardPage> {
                   Row(
                     children: [
                       Expanded(
-                        child: InfoPill(
-                          label: "Berat Pakan",
-                          statusText: "90%",
-                          subtitle: "Good",
-                          isSystem: false,
+                        child: StreamBuilder<double>(
+                          stream: widget.service.getCurrentWeightStream(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasError) {
+                              print('Weight stream error: ${snapshot.error}');
+                              return InfoPill(
+                                label: "Berat Pakan",
+                                statusText: "Error",
+                                subtitle: "Gagal mengambil data",
+                                isSystem: false,
+                              );
+                            }
+                            
+                            if (!snapshot.hasData) {
+                              return InfoPill(
+                                label: "Berat Pakan",
+                                statusText: "Loading...",
+                                subtitle: "Mengambil data",
+                                isSystem: false,
+                              );
+                            }
+                            
+                            final weight = snapshot.data!;
+                            print('Received weight: $weight'); // Debug print
+                            final weightText = "${weight.toStringAsFixed(1)}g";
+                            
+                            return InfoPill(
+                              label: "Berat Pakan",
+                              statusText: weightText,
+                              subtitle: "Updated",
+                              isSystem: false,
+                            );
+                          },
                         ),
                       )
                     ],
@@ -265,6 +308,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                   label: "Pemberian Makan",
                                   statusText: dateFormatter.format(entry.time),
                                   subtitle: entry.success ? "Berhasil" : "Gagal",
+                                  colorOverride: entry.success ? Colors.greenAccent[100] : Colors.redAccent[100],
                                   isSystem: false,
                                 ),
                               ),
@@ -278,7 +322,7 @@ class _DashboardPageState extends State<DashboardPage> {
               );
             }
           ),
-          RTSPCard(url: '')
+          RTSPCard()
         ],
       ),
     );

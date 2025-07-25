@@ -1,60 +1,143 @@
-import 'dart:typed_data';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:media_kit/media_kit.dart';
-import 'package:media_kit_video/media_kit_video.dart';
+import 'package:flutter_vlc_player/flutter_vlc_player.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'cards.dart';
 
 class RTSPCard extends StatefulWidget {
-  final String url;
+  final String? url;
+  final String username;
+  final String password;
+  final String channel;
+  final int port;
 
-  const RTSPCard({super.key, required this.url});
+  const RTSPCard({
+    super.key,
+    this.url,
+    this.username = 'admin',
+    this.password = 'KQRHXD',
+    this.channel = '101',
+    this.port = 554,
+  });
 
   @override
   State<StatefulWidget> createState() => _RTSPCard();
 }
 
-class _RTSPCard extends State<RTSPCard>{
-  late final player = Player();
-  late final controller = VideoController(player);
-  Uint8List? capturedImage;
+class _RTSPCard extends State<RTSPCard> {
+  late final VlcPlayerController? _vlcController;
+  bool _isPlaying = false;
+  bool _isInitialized = false;
+
+  String? _rtspUrl;
 
   @override
   void initState() {
     super.initState();
-    player.open(Media(widget.url));
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    if (widget.url != null) {
+      _rtspUrl = widget.url;
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      final ip = prefs.getString('camera_ip') ?? '192.168.33.234';
+      _rtspUrl =
+          'rtsp://${widget.username}:${widget.password}@$ip:${widget.port}/Streaming/Channels/${widget.channel}/';
+    }
+
+    _vlcController = VlcPlayerController.network(
+      _rtspUrl!,
+      hwAcc: HwAcc.full,
+      autoPlay: true,
+      options: VlcPlayerOptions(
+        rtp: VlcRtpOptions([VlcRtpOptions.rtpOverRtsp(true)]),
+      ),
+    );
+
+    try {
+      await _vlcController?.initialize();
+      if (!mounted) return;
+    } catch (e) {
+      debugPrint('VLC init error: $e');
+    }
+
+    _vlcController?.addOnInitListener(() {
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    });
+
+    _vlcController?.addListener(_vlcListener);
+  }
+
+  void _vlcListener() {
+    if (!mounted) return;
+    final value = _vlcController!.value;
+    print("VLC State: Initialized = ${value.isInitialized}, buffering = ${value.isBuffering}, playing = ${value.playingState}");
+    if(value.playingState == PlayingState.error){
+      print("Error ${value.errorDescription}");
+    }
+    setState(() {
+      _isPlaying = _vlcController!.value.isPlaying;
+    });
   }
 
   @override
-  void dispose() {
-    player.dispose();
+  Future<void> dispose() async {
+    _vlcController?.removeListener(_vlcListener);
+    await _vlcController?.stopRendererScanning();
+    await _vlcController?.dispose();
     super.dispose();
   }
 
-  Future<void> takeSnapshot() async {
-    final Uint8List? bytes = (await player.screenshot(format: 'image/png'));
-    if(bytes != null){
-      showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text("Snapshot Taken"),
-            content: Image.memory(bytes),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Close')
-              )
-            ],
-          )
+  Future<void> sendRoboflowAPI(String base64Image) async {
+    try {
+      final url = "https://serverless.roboflow.com/koi-fish-8tgj6/1?api_key=U6I7ZQ4Znfzxiubgn1Et";
+      final headers = {"Content Type" : "application/x-www-form-urlencoded"};
+      final body = {
+        "data" : base64Image
+      };
+
+      final encodedBody = Uri(queryParameters: body).query;
+      final response = await http.post(
+          Uri.parse(url),
+          headers: headers,
+          body: encodedBody
       );
-    }else{
+
+      if (response.statusCode == 200){
+        print(response.body);
+      }else{
+        print('Error status code : ${response.statusCode}, Response : ${response.body}');
+      }
+    } catch (e) {
+      print("Error found when calling Roboflow API ${e.toString()}");
+    }
+  }
+
+  Future<void> takeSnapshot() async {
+    if(!_vlcController!.value.isInitialized)return;
+    try{
+      final bytes = await _vlcController.takeSnapshot();
+      if(bytes != null){
+        final base64Image = base64Encode(bytes);
+        sendRoboflowAPI(base64Image);
+      }else{
+        print("Bytes is empty");
+      }
+
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to capture snapshot'))
+        SnackBar(content: Text('Snapshot failed: $e')),
       );
     }
-    setState(() {
-      capturedImage = bytes;
-    });
   }
 
   @override
@@ -67,9 +150,18 @@ class _RTSPCard extends State<RTSPCard>{
         SizedBox(
           width: double.infinity,
           height: 250,
-          child: Video(controller: controller),
+          child: _vlcController != null && _isInitialized
+              ? VlcPlayer(
+                  controller: _vlcController!,
+                  aspectRatio: 16 / 9,
+                  placeholder: const Center(child: CircularProgressIndicator()),
+                )
+              : const Center(child: CircularProgressIndicator()),
         ),
-        ElevatedButton(onPressed: takeSnapshot, child: Icon(Icons.camera))
+        ElevatedButton(
+          onPressed: takeSnapshot,
+          child: const Icon(Icons.camera),
+        ),
       ],
     );
   }

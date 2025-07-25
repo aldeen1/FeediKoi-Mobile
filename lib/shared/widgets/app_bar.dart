@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:feedikoi/services/feedikoi_service.dart';
+import 'package:feedikoi/data/models/feedikoi_models.dart';
+import 'package:intl/intl.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String activityText;
+  final FeedikoiService service;
   final bool hasUnreadNotifs;
 
   const CustomAppBar({
     super.key,
-    required this.activityText,
+    required this.service,
     this.hasUnreadNotifs = false
   });
 
@@ -21,7 +24,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             children: [
-              // Activity Box
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -34,10 +36,27 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                       const Icon(Icons.info_outline, size: 20, color: Colors.black),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
-                          activityText,
-                          style: const TextStyle(fontSize: 14, color: Colors.black),
-                          overflow: TextOverflow.ellipsis,
+                        child: StreamBuilder<List<FeedHistoryEntry>>(
+                          stream: service.getHistoryStream(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                              return const Text(
+                                "Menunggu aktivitas...",
+                                style: TextStyle(fontSize: 14, color: Colors.black),
+                                overflow: TextOverflow.ellipsis,
+                              );
+                            }
+
+                            final latestEntry = snapshot.data!.first;
+                            final timeFormat = DateFormat('HH:mm');
+                            final statusText = latestEntry.success ? "Berhasil" : "Gagal";
+                            
+                            return Text(
+                              "Pemberian pakan ${timeFormat.format(latestEntry.time)} - $statusText",
+                              style: const TextStyle(fontSize: 14, color: Colors.black),
+                              overflow: TextOverflow.ellipsis,
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -47,7 +66,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
               const SizedBox(width: 12),
 
-              // Notification Bell with Badge
               Stack(
                 children: [
                   Container(
@@ -57,12 +75,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: IconButton(
-                      icon: const Icon(Icons.notifications_none, color: Colors.black),
-                      onPressed: () {
-                        // TODO: Handle notification tap
-                      },
-                    ),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 32,
+                      height: 32,
+                    )
                   ),
 
                   // Red Dot

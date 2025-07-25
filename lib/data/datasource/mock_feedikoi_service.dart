@@ -8,6 +8,7 @@ class MockFeedikoiService implements FeedikoiService {
   final _settingsCtrl = BehaviorSubject<FeedSettings>();
   final _inferenceCtrl = BehaviorSubject<InferenceResult>();
   final _growthCtrl = BehaviorSubject<List<FishGrowthData>>();
+  final _weightCtrl = BehaviorSubject<double>.seeded(0.0);
 
   bool _systemOn = true;
   final List<FeedHistoryEntry> _history = [];
@@ -56,6 +57,12 @@ class MockFeedikoiService implements FeedikoiService {
     _inferenceCtrl.add(InferenceResult(
         imageUrl: 'https://placekitten.com/400/300',
         bboxCm: {'koi': 23.0, 'weed': 10.1}));
+    
+    Stream.periodic(const Duration(seconds: 10), (i) {
+      return 100.0 + (i % 10) * 5.0;
+    }).listen((weight) {
+      _weightCtrl.add(weight);
+    });
   }
 
   @override
@@ -99,6 +106,9 @@ class MockFeedikoiService implements FeedikoiService {
     _systemOn = systemOn;
     _pushCurrent();
   }
+
+  @override
+  Stream<double> getCurrentWeightStream() => _weightCtrl.stream;
 
   void simulateInference(InferenceResult inference) {
     final length = inference.bboxCm['koi'] ?? 0;
