@@ -77,6 +77,11 @@ android {
             jniLibs.srcDirs("src/main/jniLibs")
         }
     }
+
+    aaptOptions {
+        noCompress("tfLite")
+        noCompress("lite")
+    }
 }
 
 flutter {
