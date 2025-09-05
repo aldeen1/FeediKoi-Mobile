@@ -19,6 +19,8 @@ import 'features/profile/profile_page.dart';
 import 'features/splash/splash_screen_page.dart';
 import 'features/statistic_pakan/statistic_pakan_page.dart';
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> requestInitialPermissions() async {
   await Future.wait([
     Permission.photos.request(),
@@ -50,6 +52,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         textTheme: GoogleFonts.instrumentSansTextTheme()
       ),
+      navigatorKey: rootNavigatorKey,
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreenPage(),
